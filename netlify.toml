@@ -1,14 +1,16 @@
 [build]
-publish = ".next"
 command = "npm run build"
+publish = ".next"
 
-[functions]
-node_bundler = "esbuild"
+[[plugins]]
+package = "@netlify/plugin-nextjs"
 
+Set up a redirect for the API route
 [[redirects]]
 from = "/api/*"
 to = "/.netlify/functions/:splat"
 status = 200
 
+Set up the environment variable for your API key
 [build.environment]
 SERPAPI_API_KEY = "YOUR_SERPAPI_API_KEY_HERE"
