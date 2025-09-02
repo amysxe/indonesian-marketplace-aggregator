@@ -8,11 +8,14 @@ from datetime import datetime
 # This is the main handler function for the Netlify serverless environment.
 # It receives an event object containing details about the incoming request.
 def handler(event, context):
+    print("Menerima permintaan baru ke API.") # Log to check if the function is being triggered
     try:
         # Get the search query from the URL's query string parameters.
         # We use a default value 'hp samsung' if no query is provided.
         query_string = event.get('queryStringParameters', {})
         search_query = query_string.get('q', 'hp samsung')
+
+        print(f"Kata kunci pencarian: {search_query}") # Log the search query
 
         # Retrieve the API key from environment variables.
         # This is the safest way to handle secrets like API keys.
@@ -41,6 +44,8 @@ def handler(event, context):
         search = GoogleSearch(params)
         results = search.get_dict()
         shopping_results = results.get('shopping_results', [])
+
+        print(f"Jumlah hasil yang ditemukan: {len(shopping_results)}") # Log the number of results found
 
         # If no shopping results are found, return an empty array to the frontend.
         if not shopping_results:
