@@ -11,6 +11,7 @@ interface Product {
   url: string;
   imageUrl: string;
   timestamp: number;
+  dateScraped: string;
 }
 
 export default function App() {
@@ -22,7 +23,7 @@ export default function App() {
 
   // Set the document title on component mount
   useEffect(() => {
-    document.title = 'Cari Produk Inceranmu';
+    document.title = 'Product Scraper';
   }, []);
 
   // Handle the search form submission
@@ -35,8 +36,14 @@ export default function App() {
     setProducts([]); // Clear previous results
 
     try {
-      // Fetch data from our new API endpoint
-      const response = await fetch(`/api/scrape?q=${encodeURIComponent(keyword)}`);
+      // Fetch data from our new API endpoint using a POST request
+      const response = await fetch(`/api/scrape`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: keyword }),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch data from API.');
@@ -71,7 +78,6 @@ export default function App() {
         <p className="mt-4 text-lg text-gray-600 dark:text-gray-400">
           Tulis produk yang kamu cari, pilih yang terbaik
         </p>
-
         <form onSubmit={handleSearch} className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
           <div className="relative w-full sm:w-2/3">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -161,11 +167,14 @@ export default function App() {
                 </div>
                 <div className="p-4">
                   <h3 className="text-lg font-semibold truncate">{product.name}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
+                    Seller: {product.seller}
+                  </p>
                   <p className="text-xl font-bold mt-2 text-blue-600 dark:text-blue-400">
                     {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(product.price)}
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">
-                    Seller: {product.seller}
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Scraped: {product.dateScraped}
                   </p>
                 </div>
               </a>
