@@ -1,120 +1,86 @@
 import { NextResponse } from 'next/server';
 
-// This is a mock API route for a Next.js serverless function.
-// It simulates the process of scraping multiple marketplaces.
-
-// Define the shape of our mock product data.
-interface Product {
-    product_id: string;
-    source: string;
-    name: string;
-    price: number;
-    seller: string;
-    url: string;
-    imageUrl: string;
-    timestamp: number;
-}
-
-// Mock database of products from different marketplaces.
-const mockDatabase: Product[] = [
-    {
-        product_id: 'prod-001-tkp',
+// This is a mock data set to simulate product search results.
+const MOCK_PRODUCTS = [
+  {
+    keyword: 'iPhone 15',
+    data: [
+      {
         source: 'Tokopedia',
-        name: 'Keyboard Gaming Logitech G Pro X',
-        price: 1800000,
-        seller: 'Toko Gaming Pro',
-        url: 'https://www.tokopedia.com/product-001',
-        imageUrl: 'https://placehold.co/400x400/FF5722/FFFFFF?text=Logitech',
-        timestamp: Date.now()
-    },
-    {
-        product_id: 'prod-002-shp',
+        name: 'Apple iPhone 15 Pro Max',
+        price: 25999000,
+        seller: 'TokoGadget Resmi',
+        url: '#',
+        imageUrl: 'https://placehold.co/400x400/0891b2/ffffff?text=iPhone+15',
+        timestamp: Date.now(),
+      },
+      {
         source: 'Shopee',
-        name: 'Mouse Gaming Razer DeathAdder V2',
-        price: 750000,
-        seller: 'Shopee Gadget Store',
-        url: 'https://shopee.co.id/product-002',
-        imageUrl: 'https://placehold.co/400x400/EE4D2D/FFFFFF?text=Razer',
-        timestamp: Date.now()
-    },
-    {
-        product_id: 'prod-003-blp',
-        source: 'Bukalapak',
-        name: 'Monitor Asus ROG Swift 240Hz',
-        price: 6500000,
-        seller: 'Buka Gaming Official',
-        url: 'https://www.bukalapak.com/product-003',
-        imageUrl: 'https://placehold.co/400x400/E51937/FFFFFF?text=Asus',
-        timestamp: Date.now()
-    },
-    {
-        product_id: 'prod-004-lz',
+        name: 'iPhone 15 Pro (128GB)',
+        price: 22499000,
+        seller: 'Gadget Store',
+        url: '#',
+        imageUrl: 'https://placehold.co/400x400/0891b2/ffffff?text=iPhone+15',
+        timestamp: Date.now(),
+      },
+      {
         source: 'Lazada',
-        name: 'Headset SteelSeries Arctis 7',
-        price: 2200000,
-        seller: 'Lazada Electronics',
-        url: 'https://www.lazada.co.id/product-004',
-        imageUrl: 'https://placehold.co/400x400/1E74FD/FFFFFF?text=SteelSeries',
-        timestamp: Date.now()
-    },
-    {
-        product_id: 'prod-005-tkp',
+        name: 'iPhone 15 Plus',
+        price: 20500000,
+        seller: 'Lazada Official',
+        url: '#',
+        imageUrl: 'https://placehold.co/400x400/0891b2/ffffff?text=iPhone+15',
+        timestamp: Date.now(),
+      },
+    ],
+  },
+  {
+    keyword: 'Samsung S24',
+    data: [
+      {
         source: 'Tokopedia',
-        name: 'Webcam Logitech C922 Pro',
-        price: 1200000,
-        seller: 'Toko Streamer',
-        url: 'https://www.tokopedia.com/product-005',
-        imageUrl: 'https://placehold.co/400x400/FF5722/FFFFFF?text=Logitech',
-        timestamp: Date.now()
-    },
-    {
-        product_id: 'prod-006-shp',
+        name: 'Samsung Galaxy S24 Ultra',
+        price: 21999000,
+        seller: 'Samsung Official',
+        url: '#',
+        imageUrl: 'https://placehold.co/400x400/0891b2/ffffff?text=Samsung+S24',
+        timestamp: Date.now(),
+      },
+      {
         source: 'Shopee',
-        name: 'Kursi Gaming Secretlab Titan',
-        price: 5500000,
-        seller: 'Official Gaming Store',
-        url: 'https://shopee.co.id/product-006',
-        imageUrl: 'https://placehold.co/400x400/EE4D2D/FFFFFF?text=Secretlab',
-        timestamp: Date.now()
-    },
-    {
-        product_id: 'prod-007-blp',
-        source: 'Bukalapak',
-        name: 'Meja Gaming JYSK',
-        price: 900000,
-        seller: 'Furniture Online',
-        url: 'https://www.bukalapak.com/product-007',
-        imageUrl: 'https://placehold.co/400x400/E51937/FFFFFF?text=JYSK',
-        timestamp: Date.now()
-    },
-    {
-        product_id: 'prod-008-lz',
-        source: 'Lazada',
-        name: 'Microphone Blue Yeti',
-        price: 1500000,
-        seller: 'Lazada Store Elektronik',
-        url: 'https://www.lazada.co.id/product-008',
-        imageUrl: 'https://placehold.co/400x400/1E74FD/FFFFFF?text=Blue',
-        timestamp: Date.now()
-    },
+        name: 'Samsung S24+ (512GB)',
+        price: 18499000,
+        seller: 'Gadget Elektronik',
+        url: '#',
+        imageUrl: 'https://placehold.co/400x400/0891b2/ffffff?text=Samsung+S24',
+        timestamp: Date.now(),
+      },
+    ],
+  },
 ];
 
-// This is the main function that will be called by Next.js.
-// It handles the GET request to the API route.
 export async function GET(request: Request) {
-    // Get the search query from the URL.
-    const url = new URL(request.url);
-    const query = url.searchParams.get('q');
+  try {
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get('q');
 
     if (!query) {
-        return NextResponse.json({ error: 'Missing search query.' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing search query parameter' }, { status: 400 });
     }
 
-    // Filter the mock database based on the query.
-    const filteredProducts = mockDatabase.filter(product =>
-        product.name.toLowerCase().includes(query.toLowerCase())
-    );
+    const keywordLower = query.toLowerCase();
 
-    // Return the filtered products as a JSON response.
-    return NextResponse.json(filteredProducts);
+    // Find the matching mock data
+    const foundData = MOCK_PRODUCTS.find(p => p.keyword.toLowerCase() === keywordLower);
+
+    if (foundData) {
+      return NextResponse.json(foundData.data);
+    } else {
+      // Return an empty array if no match is found
+      return NextResponse.json([]);
+    }
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
 }
