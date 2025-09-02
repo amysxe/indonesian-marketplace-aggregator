@@ -6,6 +6,6 @@ publish = ".next"
 package = "@netlify/plugin-nextjs"
 
 [[redirects]]
-from = "/api/scrape"
-to = "/.netlify/functions/api_scrape"
+from = "/api/*"
+to = "/.netlify/functions/server/api/:splat"
 status = 200
