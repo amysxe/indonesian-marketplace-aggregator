@@ -8,12 +8,12 @@ class MockScraper:
     def __init__(self):
         # A simple mock database of products for demonstration
         self.products = [
-            {"product_id": str(uuid.uuid4()), "source": "Tokopedia", "name": "Keyboard Gaming Mekanik Gateron Pro", "price": 850000, "seller": "TokoTech", "url": "https://example.com/tokped/a", "imageUrl": "https://placehold.co/400x400/22c55e/ffffff?text=Tokped+A", "timestamp": int(time.time())},
-            {"product_id": str(uuid.uuid4()), "source": "Shopee", "name": "Mouse Gaming Nirkabel RGB", "price": 425000, "seller": "GadgetGrosir", "url": "https://example.com/shopee/b", "imageUrl": "https://placehold.co/400x400/ef4444/ffffff?text=Shopee+B", "timestamp": int(time.time())},
-            {"product_id": str(uuid.uuid4()), "source": "Bukalapak", "name": "Headset Bluetooth Bass", "price": 600000, "seller": "ElektronikPintar", "url": "https://example.com/bukalapak/c", "imageUrl": "https://placehold.co/400x400/3b82f6/ffffff?text=Bukalapak+C", "timestamp": int(time.time())},
-            {"product_id": str(uuid.uuid4()), "source": "Lazada", "name": "Keyboard Gaming Logitech G Pro", "price": 1100000, "seller": "TokoTech", "url": "https://example.com/lazada/z", "imageUrl": "https://placehold.co/400x400/f97316/ffffff?text=Lazada+Z", "timestamp": int(time.time())},
-            {"product_id": str(uuid.uuid4()), "source": "Tokopedia", "name": "Mouse Gaming Nirkabel Ringan", "price": 400000, "seller": "GadgetGrosir", "url": "https://example.com/tokped/y", "imageUrl": "https://placehold.co/400x400/8b5cf6/ffffff?text=Tokped+Y", "timestamp": int(time.time())},
-            {"product_id": str(uuid.uuid4()), "source": "Shopee", "name": "Mouse Gaming Logitech G502 Hero", "price": 450000, "seller": "ElektronikPintar", "url": "https://example.com/shopee/z", "imageUrl": "https://placehold.co/400x400/6b7280/ffffff?text=Shopee+Z", "timestamp": int(time.time())},
+            {"product_id": str(uuid.uuid4()), "source": "Tokopedia", "name": "Keyboard Gaming Mekanik Gateron Pro", "price": 850000, "seller": "TokoTech", "url": "https://example.com/tokped/a", "imageUrl": "https://placehold.co/400x400/22c55e/ffffff?text=Tokped+A"},
+            {"product_id": str(uuid.uuid4()), "source": "Shopee", "name": "Mouse Gaming Nirkabel RGB", "price": 425000, "seller": "GadgetGrosir", "url": "https://example.com/shopee/b", "imageUrl": "https://placehold.co/400x400/ef4444/ffffff?text=Shopee+B"},
+            {"product_id": str(uuid.uuid4()), "source": "Bukalapak", "name": "Headset Bluetooth Bass", "price": 600000, "seller": "ElektronikPintar", "url": "https://example.com/bukalapak/c", "imageUrl": "https://placehold.co/400x400/3b82f6/ffffff?text=Bukalapak+C"},
+            {"product_id": str(uuid.uuid4()), "source": "Lazada", "name": "Keyboard Gaming Logitech G Pro", "price": 1100000, "seller": "TokoTech", "url": "https://example.com/lazada/z", "imageUrl": "https://placehold.co/400x400/f97316/ffffff?text=Lazada+Z"},
+            {"product_id": str(uuid.uuid4()), "source": "Tokopedia", "name": "Mouse Gaming Nirkabel Ringan", "price": 400000, "seller": "GadgetGrosir", "url": "https://example.com/tokped/y", "imageUrl": "https://placehold.co/400x400/8b5cf6/ffffff?text=Tokped+Y"},
+            {"product_id": str(uuid.uuid4()), "source": "Shopee", "name": "Mouse Gaming Logitech G502 Hero", "price": 450000, "seller": "ElektronikPintar", "url": "https://example.com/shopee/z", "imageUrl": "https://placehold.co/400x400/6b7280/ffffff?text=Shopee+Z"},
             {"product_id": str(uuid.uuid4()), "source": "Bukalapak", "name": "Earphone TWS Pro", "price": 300000, "seller": "TokoAudio", "url": "https://example.com/bukalapak/d", "imageUrl": "https://placehold.co/400x400/a3e635/000000?text=Buka+D", "timestamp": int(time.time())},
             {"product_id": str(uuid.uuid4()), "source": "Lazada", "name": "Laptop Gaming ASUS ROG", "price": 18000000, "seller": "SuperKomputer", "url": "https://example.com/lazada/e", "imageUrl": "https://placehold.co/400x400/c084fc/ffffff?text=Lazada+E", "timestamp": int(time.time())},
         ]
@@ -24,14 +24,20 @@ class MockScraper:
         Returns a list of products that match the query in their name.
         """
         if not query:
-            return self.products
+            return self.products[:6]
 
         query = query.lower()
         results = [
             p for p in self.products
             if query in p["name"].lower()
         ]
-        return results
+        
+        # Add a date scraped to each product
+        for p in results:
+            p["dateScraped"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
+        # Limit the results to a maximum of 6
+        return results[:6]
 
 # The handler function that Vercel will call
 def handler(request):
