@@ -1,15 +1,9 @@
-# This is a backend API for scraping product data from mock marketplaces.
-# It is designed to work with the React frontend created previously.
-# NOTE: This is a simulation and does not scrape real websites.
-# In a real-world scenario, you would use libraries like BeautifulSoup and requests
-# to parse HTML from actual marketplace websites.
-
-from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 import urllib.parse
 import time
 import uuid
 
+# Define the data structure for a product
 class MockScraper:
     def __init__(self):
         # A simple mock database of products for demonstration
@@ -39,51 +33,26 @@ class MockScraper:
         ]
         return results
 
-class MyRequestHandler(BaseHTTPRequestHandler):
+# The handler function that Vercel will call
+def handler(request):
     """
-    A simple HTTP request handler for the scraping API.
+    Handles a Vercel serverless function request.
+    This function is structured to be compatible with Vercel's
+    serverless function environment.
     """
+    # Parse the query parameters from the request URL
+    url_parts = urllib.parse.urlparse(request.url)
+    query_params = urllib.parse.parse_qs(url_parts.query)
+
+    query_term = query_params.get('q', [''])[0]
+
+    # Use the scraper to get the products based on the query term
     scraper = MockScraper()
-
-    def do_GET(self):
-        """
-        Handles GET requests to the /api/scrape endpoint.
-        It parses the 'q' parameter and returns filtered product data.
-        """
-        # Parse the URL to get the query parameters
-        url_parts = urllib.parse.urlparse(self.path)
-        query_params = urllib.parse.parse_qs(url_parts.query)
-
-        # Check if the path is our expected API endpoint
-        if url_parts.path == '/api/scrape':
-            query_term = query_params.get('q', [''])[0]
-            
-            # Use the scraper to get the products based on the query term
-            products = self.scraper.search_products(query_term)
-            
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            
-            # Prepare the response body as JSON
-            response_body = json.dumps(products)
-            self.wfile.write(response_body.encode('utf-8'))
-        else:
-            # Handle other paths with a 404 Not Found error
-            self.send_response(404)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            response_body = json.dumps({"error": "Endpoint not found."})
-            self.wfile.write(response_body.encode('utf-8'))
-
-def run_server():
-    """
-    Sets up and runs the HTTP server.
-    """
-    server_address = ('', 8000)
-    httpd = HTTPServer(server_address, MyRequestHandler)
-    print('Starting server on port 8000...')
-    httpd.serve_forever()
-
-if __name__ == '__main__':
-    run_server()
+    products = scraper.search_products(query_term)
+    
+    # Return a response object with the status code and JSON body
+    return {
+        'statusCode': 200,
+        'headers': {'Content-type': 'application/json'},
+        'body': json.dumps(products)
+    }
