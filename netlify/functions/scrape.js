@@ -32,8 +32,18 @@ async function scrapeProducts(query) {
       return [];
     }
 
-    // Process and format the data from the 'shopping_results' array, limiting to 6 items.
-    const products = (data.shopping_results || []).slice(0, 6).map((item) => ({
+    // Define the list of valid marketplaces.
+    const marketplaces = ['tokopedia', 'bukalapak', 'lazada', 'shopee'];
+
+    // Process and filter the results, then format the data.
+    const products = (data.shopping_results || [])
+      .filter(item => {
+        const source = item.source?.toLowerCase() || '';
+        const seller = item.merchant?.name?.toLowerCase() || '';
+        return marketplaces.some(market => source.includes(market) || seller.includes(market));
+      })
+      .slice(0, 6) // Limit to a maximum of 6 results after filtering
+      .map((item) => ({
       source: item.source || 'N/A',
       name: item.title,
       price: item.price_value,
