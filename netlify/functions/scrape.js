@@ -32,15 +32,15 @@ async function scrapeProducts(query) {
       return [];
     }
 
-    // Define the list of valid marketplaces.
+    // Define the list of valid marketplaces based on their domain names.
     const marketplaces = ['tokopedia', 'bukalapak', 'lazada', 'shopee'];
 
     // Process and filter the results, then format the data.
+    // Filtering by the product's URL is more reliable than by source or seller name.
     const products = (data.shopping_results || [])
       .filter(item => {
-        const source = item.source?.toLowerCase() || '';
-        const seller = item.merchant?.name?.toLowerCase() || '';
-        return marketplaces.some(market => source.includes(market) || seller.includes(market));
+        const link = item.link?.toLowerCase() || '';
+        return marketplaces.some(market => link.includes(market));
       })
       .slice(0, 6) // Limit to a maximum of 6 results after filtering
       .map((item) => ({
