@@ -7,5 +7,5 @@ package = "@netlify/plugin-nextjs"
 
 [[redirects]]
 from = "/api/*"
-to = "/.netlify/functions/api_scrape"
+to = "/.netlify/functions/scrape"
 status = 200
