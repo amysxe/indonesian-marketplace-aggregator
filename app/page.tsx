@@ -6,135 +6,138 @@ type Product = {
   product_id: string;
   source: string;
   name: string;
-  price: string;
+  price: number;
   seller: string;
   url: string;
   imageUrl: string;
-  dateScraped: string;
 };
 
-export default function Page() {
+export default function Home() {
   const [query, setQuery] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const handleSearch = async () => {
-    if (query.trim() === '') return;
+    if (!query) return;
 
     setIsLoading(true);
-    setError(null);
+    setIsSearching(true);
+    setHasSearched(true);
     try {
-      const response = await fetch(`/api/scrape?q=${encodeURIComponent(query)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
+      const response = await fetch(`/api/scrape?q=${encodeURIComponent(query)}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch data from API.');
+        throw new Error('Network response was not ok');
       }
-
       const data: Product[] = await response.json();
       setProducts(data);
-    } catch (err) {
-      setError('Failed to fetch data from API. Please check your network connection or try again later.');
+    } catch (error) {
+      console.error('Failed to fetch data from API:', error);
       setProducts([]);
     } finally {
       setIsLoading(false);
+      setIsSearching(false);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
       handleSearch();
     }
   };
 
   return (
-    <div className="bg-slate-900 min-h-screen text-white font-sans flex flex-col items-center p-4">
-      {/* Header Section */}
-      <header className="text-center my-8 max-w-2xl mx-auto">
-        <h1 className="text-5xl md:text-6xl font-extrabold text-blue-400 mb-2">
+    <div className="min-h-screen flex flex-col items-center justify-start bg-neutral-900 text-white p-4 font-sans">
+      <div className="w-full max-w-2xl text-center">
+        <h1 className="text-4xl font-extrabold mt-12 mb-2 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-600">
           Cari Produk Inceranmu
         </h1>
-        <p className="text-lg md:text-xl font-light text-slate-300">
-          Kami bantu kamu cari harga terbaik dari produk yang dicari
+        <p className="text-lg text-neutral-400 mb-8">
+          Tulis produk yang kamu cari, pilih yang terbaik.
         </p>
-      </header>
-
-      {/* Search Bar Section */}
-      <div className="w-full max-w-xl mb-8">
-        <div className="relative flex rounded-full shadow-lg overflow-hidden transition-all duration-300 focus-within:ring-4 focus-within:ring-blue-500/50">
-          <input
-            type="text"
-            className="flex-grow p-4 bg-slate-800 text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-0"
-            placeholder="Cari produk seperti 'keyboard gaming' atau 'sepatu lari'..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <button
-            onClick={handleSearch}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 transition-colors duration-300 focus:outline-none"
-            aria-label="Cari Produk"
-          >
-            Cari
-          </button>
-        </div>
       </div>
 
-      {/* Main Content */}
-      <main className="w-full max-w-7xl mx-auto">
-        {isLoading && (
-          <div className="flex justify-center items-center h-48">
-            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        )}
-        {error && (
-          <div className="text-center text-red-400 p-4 rounded-lg bg-red-900/20">
-            {error}
-          </div>
-        )}
-        {!isLoading && products.length === 0 && query !== '' && (
-          <div className="text-center text-slate-400 p-4">
-            <p>Maaf, tidak ada produk yang ditemukan. Coba kata kunci lain.</p>
-          </div>
-        )}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-          {products.map((product) => (
-            <a key={product.product_id} href={product.url} target="_blank" rel="noopener noreferrer" className="block transform hover:scale-105 transition-transform duration-200">
-              <div className="bg-slate-800 rounded-2xl overflow-hidden shadow-xl h-full flex flex-col">
-                <div className="p-2 aspect-w-1 aspect-h-1 w-full overflow-hidden bg-slate-700">
-                  <img src={product.imageUrl} alt={product.name} className="w-full h-full object-contain rounded-xl" />
-                </div>
-                <div className="p-4 flex flex-col flex-grow">
-                  <h3 className="text-lg font-semibold text-slate-100 mb-1 truncate">{product.name}</h3>
-                  <div className="text-xl font-bold text-blue-400 mb-2">{product.price}</div>
-                  <div className="flex items-center text-slate-400 text-sm mb-1">
-                    <svg className="w-4 h-4 mr-1 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    </svg>
-                    <span>{product.seller}</span>
-                  </div>
-                  <div className="flex items-center text-slate-500 text-xs mt-auto">
-                    <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                    <span>{product.dateScraped}</span>
-                  </div>
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      </main>
+      <div className="w-full max-w-xl flex items-center bg-white p-2 rounded-full shadow-lg border border-neutral-700">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Masukkan kata kunci produk..."
+          className="flex-grow bg-white text-neutral-900 placeholder-neutral-500 p-3 rounded-l-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+        />
+        <button
+          onClick={handleSearch}
+          className="bg-blue-600 text-white p-3 rounded-full hover:bg-blue-700 transition-colors duration-300"
+          disabled={isSearching}
+        >
+          {isSearching ? (
+            <svg
+              className="animate-spin h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          ) : (
+            'Cari'
+          )}
+        </button>
+      </div>
 
-      {/* Footer Section */}
-      <footer className="mt-12 mb-4 text-center text-sm text-slate-500">
-        <p>Craft with love. Laniakea Digital // Naimy</p>
+      {isLoading && (
+        <p className="text-neutral-400 mt-8">Sedang mencari produk...</p>
+      )}
+
+      {!isLoading && hasSearched && products.length === 0 && (
+        <p className="text-neutral-400 mt-8">Maaf, tidak ada produk yang ditemukan. Coba kata kunci lain.</p>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 my-10 max-w-7xl w-full">
+        {products.map((product) => (
+          <a
+            key={product.product_id}
+            href={product.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center bg-neutral-800 p-4 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 transform hover:scale-105 overflow-hidden w-full h-[450px]"
+          >
+            <div className="relative w-full h-48 mb-4 rounded-lg overflow-hidden flex items-center justify-center">
+              <img
+                src={product.imageUrl}
+                alt={product.name}
+                className="w-full h-full object-contain rounded-lg"
+              />
+            </div>
+            <div className="text-center w-full flex flex-col justify-between h-48">
+              <div>
+                <h3 className="text-lg font-semibold text-white truncate w-full mb-1">{product.name}</h3>
+                <p className="text-md font-bold text-blue-400">
+                  Rp{product.price.toLocaleString('id-ID')}
+                </p>
+                <p className="text-sm text-neutral-500 mt-2">{product.source}</p>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+      
+      <footer className="w-full text-center mt-auto py-4 text-neutral-500 text-sm">
+        Craft with love by Laniakea Digital // Naimy.
       </footer>
     </div>
   );
