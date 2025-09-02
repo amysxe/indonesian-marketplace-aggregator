@@ -32,10 +32,17 @@ async function scrapeProducts(query) {
       return [];
     }
 
-    // Process and format the results, taking the top 6 results without strict filtering.
-    // This provides a broader range of results for the user.
+    // Define the list of valid marketplaces based on their domain names.
+    const marketplaces = ['tokopedia', 'bukalapak', 'lazada', 'shopee'];
+
+    // Process and filter the results, then format the data.
+    // Filtering by the product's URL is more reliable than by source or seller name.
     const products = (data.shopping_results || [])
-      .slice(0, 6) // Limit to a maximum of 6 results
+      .filter(item => {
+        const link = item.link?.toLowerCase() || '';
+        return marketplaces.some(market => link.includes(market));
+      })
+      .slice(0, 6) // Limit to a maximum of 6 results after filtering
       .map((item) => ({
       source: item.source || 'N/A',
       name: item.title,
