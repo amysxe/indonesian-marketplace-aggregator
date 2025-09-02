@@ -1,149 +1,170 @@
-'use client';
+import { useState, useEffect } from 'react';
 
-import { useState } from 'react';
+type Product = {
+  product_id: string;
+  source: string;
+  name: string;
+  price: number;
+  seller: string;
+  url: string;
+  imageUrl: string;
+  timestamp: number;
+};
 
+// Main App component
 export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [products, setProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchTerm.trim()) {
-      setError('Please enter a product name to search.');
-      return;
-    }
+  // Function to format the price to Indonesian Rupiah
+  const formatRupiah = (price: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
 
-    setIsLoading(true);
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) return;
+
+    setLoading(true);
     setError('');
     setProducts([]);
 
     try {
-      // The API endpoint is now relative to the root URL
-      const response = await fetch(`/api/scrape?q=${encodeURIComponent(searchTerm)}`);
+      const response = await fetch(`/api/scrape?q=${encodeURIComponent(searchTerm)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error('Failed to fetch data from API.');
       }
 
       const data = await response.json();
-      if (data.length === 0) {
-        setError('No products found for your search. Please try a different keyword.');
+      if (Array.isArray(data)) {
+        setProducts(data);
+      } else {
+        throw new Error('Invalid data format received from API.');
       }
-      setProducts(data);
-    } catch (e) {
-      console.error("Failed to fetch data:", e);
+
+    } catch (err: any) {
+      console.error(err);
       setError('Failed to fetch data from API. Please check your network connection or try again later.');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-slate-50 p-8 font-sans antialiased">
-      {/* Tailwind CSS for the page layout */}
-      <style jsx global>{`
-        body {
-          font-family: 'Inter', sans-serif;
-        }
-      `}</style>
-
-      {/* Main container with max-width and padding */}
-      <div className="w-full max-w-6xl mx-auto">
-        <header className="text-center my-10">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-slate-800 mb-2 tracking-tight">
+    <div className="min-h-screen bg-neutral-900 font-sans text-neutral-200 flex flex-col">
+      <header className="bg-neutral-800 shadow-sm py-8 md:py-10">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-3xl md:text-5xl font-extrabold text-white">
             Cari Produk Inceranmu
           </h1>
-          <p className="text-lg text-slate-600">
+          <p className="mt-2 text-base md:text-lg text-neutral-400">
             Kami bantu kamu cari harga terbaik dari produk yang dicari
           </p>
-        </header>
+        </div>
+      </header>
 
-        {/* Search Form */}
-        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-          <div className="relative w-full sm:w-2/3 md:w-1/2">
+      <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
+        <div className="max-w-3xl mx-auto">
+          <form onSubmit={handleSearch} className="flex items-center space-x-2 bg-neutral-800 p-2 rounded-full shadow-md transition-all duration-300 focus-within:shadow-lg">
             <input
               type="text"
-              className="w-full pl-12 pr-4 py-3 border-2 border-slate-300 rounded-full shadow-lg focus:outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all duration-200"
-              placeholder="Search for a product..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-grow px-4 py-2 rounded-full focus:outline-none text-white placeholder-neutral-400 bg-transparent"
+              placeholder="Cari produk di sini..."
             />
-            {/* Search Icon */}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2"
+            <button
+              type="submit"
+              className="bg-emerald-500 text-white p-3 rounded-full shadow-md hover:bg-emerald-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50"
+              disabled={loading}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
-          </div>
-          <button
-            type="submit"
-            className="w-full sm:w-auto px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/50 transition-all duration-200"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Searching...' : 'Search'}
-          </button>
-        </form>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </form>
+        </div>
 
-        {/* Loading and Error States */}
-        {isLoading && (
-          <div className="flex justify-center items-center my-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-t-indigo-500 border-slate-200"></div>
-          </div>
-        )}
+        <div className="mt-8 md:mt-12">
+          {loading && (
+            <div className="text-center text-neutral-400">
+              <p>Mencari produk...</p>
+            </div>
+          )}
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md my-8 text-center">
-            <p className="font-semibold text-lg">{error}</p>
-          </div>
-        )}
+          {error && (
+            <div className="text-center text-red-400">
+              <p>{error}</p>
+            </div>
+          )}
 
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {products.map((product) => (
-            <a key={product.product_id} href={product.url} target="_blank" rel="noopener noreferrer" className="block">
-              <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden">
-                {/* Product Image */}
-                <div className="w-full h-56 bg-slate-200 flex items-center justify-center overflow-hidden">
+          {!loading && products.length === 0 && searchTerm.trim() && !error && (
+            <div className="text-center text-neutral-400">
+              <p>Tidak ada produk yang ditemukan.</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {products.map((product) => (
+              <a
+                key={product.product_id}
+                href={product.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-neutral-800 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 overflow-hidden"
+              >
+                <div className="aspect-w-1 aspect-h-1 overflow-hidden">
                   <img
                     src={product.imageUrl}
                     alt={product.name}
-                    className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
+                    className="object-cover w-full h-full"
                   />
                 </div>
-                {/* Product Details */}
-                <div className="p-6">
-                  <h2 className="text-xl font-bold text-slate-800 truncate mb-1" title={product.name}>
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-neutral-200 mb-1 leading-tight">
                     {product.name}
-                  </h2>
-                  <p className="text-sm font-semibold text-indigo-600 mb-3">
-                    Rp {product.price.toLocaleString('id-ID')}
+                  </h3>
+                  <p className="text-lg font-bold text-emerald-400">
+                    {formatRupiah(product.price)}
                   </p>
-                  <p className="text-xs text-slate-500 mb-2">
-                    <span className="font-semibold text-slate-700">Source:</span> {product.source}
+                  <p className="text-xs text-neutral-400 mt-1">
+                    dari <span className="font-semibold">{product.source}</span>
                   </p>
-                  <p className="text-xs text-slate-500 mb-2">
-                    <span className="font-semibold text-slate-700">Seller:</span> {product.seller}
+                  <p className="text-xs text-neutral-400">
+                    Penjual: {product.seller}
                   </p>
-                  <p className="text-xs text-slate-500">
-                    <span className="font-semibold text-slate-700">Scraped:</span> {product.dateScraped}
+                  <p className="text-xs text-neutral-500 mt-2">
+                    Diperbarui: {new Date(product.timestamp * 1000).toLocaleString('id-ID', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </p>
                 </div>
-              </div>
-            </a>
-          ))}
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
-      
-      {/* Footer */}
-      <footer className="w-full max-w-6xl mx-auto mt-20 text-center text-slate-500 text-sm py-4 border-t border-slate-300">
-        <p>Craft with love. Laniakea Digital // Naimy</p>
+      </main>
+
+      <footer className="bg-neutral-800 py-4 mt-8">
+        <div className="container mx-auto px-4 text-center text-xs text-neutral-400">
+          <p>Craft with love. Laniakea Digital // Naimy</p>
+        </div>
       </footer>
     </div>
   );
