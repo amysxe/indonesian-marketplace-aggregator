@@ -54,15 +54,16 @@ async function scrapeProducts(query) {
 // The main handler for the Netlify serverless function.
 exports.handler = async (event, context) => {
   try {
-    // We expect a POST request with the query in the body.
-    if (event.httpMethod !== 'POST') {
+    // We expect a GET request with the query in the URL.
+    if (event.httpMethod !== 'GET') {
       return {
         statusCode: 405,
         body: JSON.stringify({ message: 'Method Not Allowed' }),
       };
     }
 
-    const { query } = JSON.parse(event.body);
+    // Read the query from the URL parameters instead of the body.
+    const query = event.queryStringParameters.q;
     if (!query) {
       return {
         statusCode: 400,
